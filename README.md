@@ -1,0 +1,2 @@
+# AsepritePlugins
+Plugins for Aseprite

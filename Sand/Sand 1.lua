@@ -2,6 +2,8 @@
 local colorcount=1
 local ARRAY = {app.fgColor}
 local decrease = true
+local divide = false
+
 
 function changedecrease()
 
@@ -9,6 +11,15 @@ function changedecrease()
         decrease = false
     else 
         decrease  =true
+    end
+end
+
+function changedivide()
+
+    if divide then
+        divide = false
+    else 
+        divide =true
     end
 end
 
@@ -79,27 +90,34 @@ function decreasefill()
 
         local selection = app.activeSprite.selection
 
-        local percentage = 100
+        local percentage = 100.0
         local step = 100/colorcount
-        for i=0,colorcount do
+        for x=0,w do
+            for y=0,h do
+                if selection:contains(x,y) then
+                    img:drawPixel(x,y,ARRAY[1])   
+                end
+            end
+        end
+
+        for i=0,colorcount-1,1 do
             for x=0,w do
                 for y=0,h do
                     if selection:contains(x,y) then
-                        
-                        if percentage == 100 then
+                        local value = math.random(0,100)
+                        if(value < percentage) then
                             local color = getColor(i) 
                             img:drawPixel(x,y,color)   
-                        else
-                            local value = math.random(0,100)
-                            if(value < percentage) then
-                                local color = getColor(i) 
-                                img:drawPixel(x,y,color)   
-                            end   
-                        end
+                        end   
                     end
                 end
             end
-            percentage = percentage - step
+
+            if divide then
+                percentage = percentage / 2.0
+            else
+                percentage = percentage - step
+            end
         end
     end
 
@@ -186,6 +204,14 @@ dlg
            selected=true,
            onclick=changedecrease
          }
+
+:check{ id="dvcheck",
+         label="Mode",
+         text="Divide",
+         selected=false,
+         onclick=changedivide
+       }
+         
 
 :button{ text="Fill",
           onclick=function(ev)

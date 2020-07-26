@@ -1,4 +1,4 @@
-# AsepritePlugins
+# Aseprite Plugins
 Plugins for Aseprite
 
 ## Introduction

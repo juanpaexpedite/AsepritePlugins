@@ -13,3 +13,5 @@ This script is used to fill a selection within an image in RGB mode with the col
   - Not decreasing, it makes just equally weighted random selection from the colors in the list.
   
   - Divide instead substract the probability of appearance of a color in each decreasing step.
+
+![Sand dialog](https://github.com/juanpaexpedite/AsepritePlugins/blob/master/Sand/SandComparision.png)

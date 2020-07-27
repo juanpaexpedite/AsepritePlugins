@@ -53,11 +53,19 @@ function normalfill()
 
         local selection = app.activeLayer.sprite.selection
         
-            for x=0,w do
-                for y=0,h do
-                    if selection:contains(x,y) then
+        --Thank you https://community.aseprite.org/u/Neilius
+        local sox = selection.bounds.x
+        local soy = selection.bounds.y
+
+        local ox = selection.bounds.x - cel.bounds.x
+        local oy = selection.bounds.y - cel.bounds.y
+
+        
+            for x=0,selection.bounds.width - 1 do
+                for y=0,selection.bounds.height - 1  do
+                    if selection:contains(x + sox ,y + soy) then
                         coloridx = math.random(1,colorcount)
-                        img:drawPixel(x,y,ARRAY[coloridx])   
+                        img:drawPixel(x + ox, y + oy,ARRAY[coloridx])   
                     end
                 end
             end
@@ -90,39 +98,38 @@ function decreasefill()
 
 
         local selection = app.activeLayer.sprite.selection
-        --local selection = app.activeSprite.selection
 
-        local origin = selection.origin
+         --Thank you https://community.aseprite.org/u/Neilius
+         local sox = selection.bounds.x
+         local soy = selection.bounds.y
+ 
+         local ox = selection.bounds.x - cel.bounds.x
+         local oy = selection.bounds.y - cel.bounds.y
 
-        -- old
-        --local percentage = 100.0
-        --local step = 100.0/colorcount
         local data = dlg.data
-        --app.alert("The given value is '" .. data.sandpercentage .. "'")
-        --new
         local percentage = data.sandpercentage
         
 
         local step = percentage/colorcount
 
         if(percentage == 100) then
-            for x=0,w do
-            for y=0,h do
-                if selection:contains(x,y) then
-                    img:drawPixel(x,y,ARRAY[1])   
+            for x=0,selection.bounds.width - 1 do
+            for y=0,selection.bounds.height - 1 do
+                if selection:contains(x + sox ,y + soy) then
+                    img:drawPixel(x + ox,y + oy,ARRAY[1])   
                 end
             end
             end
         end
 
         for i=0,colorcount-1,1 do
-            for x=0,w do
-                for y=0,h do
-                    if selection:contains(x,y) then
+            for x=0,selection.bounds.width - 1 do
+                for y=0,selection.bounds.height - 1 do
+                    if selection:contains(x + sox ,y + soy) then
                         local value = math.random(0,100)
                         if(value < percentage) then
                             local color = getColor(i) 
-                            img:drawPixel(x,y,color)   
+                            img:drawPixel(x + ox,y + oy,color)   
                         end   
                     end
                 end

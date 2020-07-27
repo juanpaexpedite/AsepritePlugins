@@ -3,7 +3,7 @@ local colorcount=1
 local ARRAY = {app.fgColor}
 local decrease = true
 local divide = false
-
+local dlg
 
 function changedecrease()
 
@@ -51,8 +51,8 @@ function normalfill()
         local w = img.width
         local h = img.height
 
-        local selection = app.activeSprite.selection
-
+        local selection = app.activeLayer.sprite.selection
+        
             for x=0,w do
                 for y=0,h do
                     if selection:contains(x,y) then
@@ -88,15 +88,30 @@ function decreasefill()
         local w = img.width
         local h = img.height
 
-        local selection = app.activeSprite.selection
 
-        local percentage = 100.0
-        local step = 100/colorcount
-        for x=0,w do
+        local selection = app.activeLayer.sprite.selection
+        --local selection = app.activeSprite.selection
+
+        local origin = selection.origin
+
+        -- old
+        --local percentage = 100.0
+        --local step = 100.0/colorcount
+        local data = dlg.data
+        --app.alert("The given value is '" .. data.sandpercentage .. "'")
+        --new
+        local percentage = data.sandpercentage
+        
+
+        local step = percentage/colorcount
+
+        if(percentage == 100) then
+            for x=0,w do
             for y=0,h do
                 if selection:contains(x,y) then
                     img:drawPixel(x,y,ARRAY[1])   
                 end
+            end
             end
         end
 
@@ -130,9 +145,9 @@ end
  -- DIALOGUE
 function showDialog()
 
-    local dlg
+    
     dlg = Dialog{
-      title="SAND 1.0",
+      title="SAND 1.1",
       onclose=function()
         FloorGeneratorWindowBounds = dlg.bounds
       end
@@ -211,6 +226,11 @@ dlg
          selected=false,
          onclick=changedivide
        }
+
+:number{ id="sandpercentage",
+        label="Decreasing Start %",
+        text="100",
+        decimals=0 }
          
 
 :button{ text="Fill",
@@ -230,4 +250,5 @@ end
 --Now we have defined the functions and dialog let's show it
 do
     showDialog()
-end  
+end
+  

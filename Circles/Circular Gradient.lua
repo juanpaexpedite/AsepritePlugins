@@ -3,6 +3,7 @@
  --app.useTool{tool="filled_rectangle", cel=source,   color=app.fgColor,    points={ p0,p1 },    }
 
 local colorcount=1
+local coloridx=1
 local ARRAY = {app.fgColor}
 local dlg
 
@@ -19,7 +20,8 @@ function main()
   
     local cel = app.activeCel
         if not cel then
-        return app.alert("There is no active image")
+        --return app.alert("There is no active image")
+        cel = app.activeSprite:newCel(app.activeLayer, 1)
     end
   
     math.randomseed(os.time())
@@ -39,7 +41,17 @@ function main()
 end
 
 function proc(x,y)
-    app.activeCel.image:drawPixel(x,y,ARRAY[1])   
+
+    local selection = app.activeLayer.sprite.selection
+
+    --Thank you https://community.aseprite.org/u/Neilius
+    local sox = selection.bounds.x
+    local soy = selection.bounds.y
+ 
+    local ox = selection.bounds.x - app.activeCel.bounds.x
+    local oy = selection.bounds.y - app.activeCel.bounds.y
+
+    app.activeCel.image:drawPixel(x+ox,y+oy,ARRAY[coloridx])   
 end
 
 function algo_ellipse(x0,y0,x1,y1)
@@ -76,7 +88,7 @@ function algo_ellipse(x0,y0,x1,y1)
   end
 
   --y0 += (b+1)/2; y1 = y0-b1;               
-  y0 = y0 + b+1/2
+  y0 = y0 + (b+1)/2
   y1 = y0-b1
 
   --a = 8*a*a; b1 = 8*b*b;
@@ -109,7 +121,7 @@ function algo_ellipse(x0,y0,x1,y1)
     end
   end
 
-  while y0-y1 <= b do
+  while y0-y1 < b do
 
     proc(x0-1, y0)       -- -> finish tip of ellipse
     proc(x1+1, y0)
@@ -145,23 +157,29 @@ function magic(source)
 
     local centre = Point(data.inix, data.iniy)
 
-    local p0 = Point(centre.x - width/2,centre.y - height/2)
-    local p1 = Point(centre.x + width/2,centre.y + height/2)
+    local p0 = Point(centre.x - width/2,centre.y + height/2)
+    local p1 = Point(centre.x + width/2,centre.y - height/2)
 
     local deltax = 0
     local deltay = 0
 
-    for i=amount,0,-1 do
+    for i=amount-1,0,-1 do
 
+        coloridx = i+1
         width = data.iniwidth + i*increasex*data.iniwidth/100
         height =  data.iniheight +  i*increasey+data.iniheight/100
 
         deltax = data.inideltax*i/100
         deltay = data.inideltay*i/100
 
-        p0 = Point(deltax + centre.x - width/2,deltay + centre.y - height/2)
-        p1 = Point(deltax + centre.x + width/2,deltay + centre.y + height/2)
+        --p0 = Point(deltax + centre.x - width/2,deltay + centre.y - height/2)
+        --p1 = Point(deltax + centre.x + width/2,deltay + centre.y + height/2)
 
+        --p0 has to be bottom left, p1 top right
+        p0 = Point(deltax + centre.x - width/2,deltay + centre.y + height/2)
+        p1 = Point(deltax + centre.x + width/2,deltay + centre.y - height/2)
+
+        --DEBUG This is using aseprite commands
         --app.useTool
         --{
         --tool="filled_ellipse",
@@ -171,6 +189,9 @@ function magic(source)
         --}
 
         algo_ellipse(p0.x, p0.y, p1.x, p1.y)
+
+        --DEBUG
+        --app.alert("P0:" .. p0.x .. "," .. p0.y .. ";P1:" .. p1.x .. "," .. p1.y)
 
         
     end

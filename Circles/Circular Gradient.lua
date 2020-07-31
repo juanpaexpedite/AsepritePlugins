@@ -2,9 +2,10 @@
  local coloridx=1
  local ARRAY = {app.fgColor}
  local dlg
+ local lay
  local cel
  local img
- 
+ local selection 
  local startwidth = 100
  local startheight = 100
  local startx = 0
@@ -23,8 +24,12 @@
      local imgheight = sprite.height
 
      img = Image(imgwidth, imgheight)
+     lay = app.activeSprite:newLayer()
+     app.activeLayer = lay
      cel = app.activeSprite:newCel(app.activeLayer, 1)
    
+     selection = app.activeSprite.selection
+
      math.randomseed(os.time())
  
      magic()
@@ -37,10 +42,7 @@
  
  end
 
- local first = true
  function proc(x,y)
- 
-     local selection = app.activeSprite.selection
 
      --TESTING RANDOM
      local value = math.random(0,100)
@@ -50,7 +52,94 @@
         end
      end
  end
+
+function procline(x0,y,x1)
  
+    local selection = app.activeSprite.selection
+    for x=x0,x1,1 do
+       if selection.isEmpty or selection:contains(x,y) then
+           img:drawPixel(x,y,ARRAY[coloridx])   
+       end
+    end
+end
+ 
+ function algo_ellipsefill(x0,y0,x1,y1)
+    --  void algo_ellipsefill(int x0, int y0, int x1, int y1, void* data, AlgoPixel proc)
+    --local x0 = 100
+    --local x1 = 200
+    --local y0 = 50
+    --local y1 = 101
+  
+    
+    --long a = abs(x1-x0), b = abs(y1-y0), b1 = b&1;                 -- diameter
+    local a = math.abs(x1-x0)
+    local b = math.abs(y1-y0)
+    --?local b1 = b&1 this is used to know if b is even or odd
+    local b1 = b % 2
+  
+    --double dx = 4*(1.0-a)*b*b, dy = 4*(b1+1)*a*a;           -- error increment
+    local dx = 4*(1.0-a)*b*b
+    local dy = 4*(b1+1)*a*a
+  
+   --double err = dx+dy+b1*a*a, e2;                          -- error of 1.step
+    local err = dx+dy+b1*a*a
+    local e2 = 0
+   
+    --if (x0 > x1) { x0 = x1; x1 += a; }        -- if called with swapped points
+    if x0 > x1 then
+       x0 = x1 
+       x1 = x1 + a
+    end
+  
+    --if (y0 > y1) y0 = y1;                                  -- .. exchange them
+    if y0 > y1 then
+      y0 = y1
+    end
+  
+    --y0 += (b+1)/2; y1 = y0-b1;               
+    y0 = y0 + (b+1)/2
+    y1 = y0-b1
+  
+    --a = 8*a*a; b1 = 8*b*b;
+    a = 8*a*a;
+    b1 = 8*b*b;
+  
+    while x0 <= x1 do
+      
+      procline(x0, y0,x1)
+      procline(x0, y1,x1)
+      
+      e2 = 2*err
+      
+      --if (e2 <= dy) { y0++; y1--; err += dy += a; }                 // y step
+      if e2 <= dy then
+          y0 = y0+1
+          y1 = y1-1
+          dy = dy+a
+          err = err + dy
+      end
+      
+      --if (e2 >= dx || 2*err > dy) { x0++; x1--; err += dx += b1; }  // x step
+      if e2 >= dx or 2*err > dy then
+          x0 = x0+1
+          x1 = x1 - 1
+          dx = dx+b1
+          err = err + dx
+      end
+    end
+  
+    while y0-y1 <= b do
+  
+      proc(x0-1, y0)       -- -> finish tip of ellipse
+      proc(x1+1, y0)
+      proc(x0-1, y1)
+      proc(x1+1, y1)
+      y0 = y0 + 1
+      y1 = y1 -1
+  
+    end     
+  
+  end
  
  function algo_ellipse(x0,y0,x1,y1)
    --  void algo_ellipse(int x0, int y0, int x1, int y1, void* data, AlgoPixel proc)
@@ -119,7 +208,7 @@
      end
    end
  
-   while y0-y1 < b do
+   while y0-y1 <= b do
  
      proc(x0-1, y0)       -- -> finish tip of ellipse
      proc(x1+1, y0)
@@ -143,8 +232,6 @@
      local amount = colorcount
      local increasex = data.iniincreasex
      local increasey = data.iniincreasey
-     local acel = app.activeCel
-     local alayer = app.activeLayer
  
      local centre = Point(data.inix, data.iniy)
  
@@ -170,15 +257,8 @@
          p0 = Point(deltax + centre.x - width/2,deltay + centre.y + height/2)
          p1 = Point(deltax + centre.x + width/2,deltay + centre.y - height/2)
          
-         --DEBUG This is using aseprite commands
-         --app.useTool
-         --{
-         --tool="filled_ellipse",
-         --color=ARRAY[i+1],
-         --points={ p0,p1 },
-         --layer = alayer,
-         --}
- 
+         algo_ellipsefill(p0.x, p0.y, p1.x, p1.y)
+
          if data.inispatter == 0 then
              algo_ellipse(p0.x, p0.y, p1.x, p1.y)
          else
@@ -199,7 +279,7 @@
  function showDialog()
  
  dlg = Dialog{
-       title="Circular Gradients 0.2",
+       title="Circular Gradients 1.0",
        onclose=function()
          WindowBounds = dlg.bounds
        end
@@ -287,32 +367,32 @@
  
  :number{ id="iniincreasex",
      label="Increase Width %",
-     text="2",
+     text="50",
      decimals=0 }
  
  :number{ id="iniincreasey",
      label="Increase Height %",
-     text="2",
+     text="50",
      decimals=0 }
  
  :number{ id="inideltax",
      label="Increase X %",
-     text="2",
+     text="0",
      decimals=0 }
  
  :number{ id="inideltay",
      label="Increase Y %",
-     text="2",
+     text="0",
      decimals=0 }
  
  :separator{ label="increase", text="Spatter" }
  
  :number{ id="inispatter",
      label="Levels",
-     text="3",
+     text="0",
      decimals=0 }
  
- :button{ text="Fill",
+ :button{ text="Fill in new Layer",
            onclick=main
          }
  

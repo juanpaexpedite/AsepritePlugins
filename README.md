@@ -11,7 +11,7 @@ Now I can create custom tasks in Aseprite with plugins, I want to create some fe
 
 ## Circular Gradients 1.0
 
-![Circular gradients](https://github.com/juanpaexpedite/AsepritePlugins/blob/master/Circles/CircularGraients.png)
+![Circular gradients](https://github.com/juanpaexpedite/AsepritePlugins/blob/master/Circles/CircularGradients.png)
 
 The gradient is always created in a new layer and works with and without a selection area.
 

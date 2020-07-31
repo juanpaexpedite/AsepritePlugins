@@ -2,6 +2,8 @@
  local coloridx=1
  local ARRAY = {app.fgColor}
  local dlg
+ local cel
+ local img
  
  local startwidth = 100
  local startheight = 100
@@ -15,57 +17,40 @@
      if app.apiVersion < 1 then
          return app.alert("This script requires Aseprite v1.2.10-beta3")
      end
-   
-     local cel = app.activeCel
-         if not cel then
-         cel = app.activeSprite:newCel(app.activeLayer, 1)
-     end
+
+     local sprite = app.activeSprite
+     local imgwidth = sprite.width
+     local imgheight = sprite.height
+
+     img = Image(imgwidth, imgheight)
+     cel = app.activeSprite:newCel(app.activeLayer, 1)
    
      math.randomseed(os.time())
-     --local img = cel.image:clone()
  
-     if cel.image.colorMode == ColorMode.RGB then
+     magic()
+    
+     cel.position = Point(0,0)
+     cel.image = img
      
-         magic(cel)
-         --algo_ellipse()
-     end
  
-     --cel.image = img
      app.refresh()
  
  end
- 
+
+ local first = true
  function proc(x,y)
  
-     local selection = app.activeLayer.sprite.selection
- 
-     --Thank you https://community.aseprite.org/u/Neilius
-     local sox = selection.bounds.x
-     local soy = selection.bounds.y
-  
-     local ox = selection.bounds.x - app.activeCel.bounds.x
-     local oy = selection.bounds.y - app.activeCel.bounds.y
- 
+     local selection = app.activeSprite.selection
+
      --TESTING RANDOM
      local value = math.random(0,100)
      if value < minvaluepercent then
-         app.activeCel.image:drawPixel(x+ox,y+oy,ARRAY[coloridx])   
+        if selection.isEmpty or selection:contains(x,y) then
+            img:drawPixel(x,y,ARRAY[coloridx])   
+        end
      end
  end
  
- function procoriginal(x,y)
- 
-     local selection = app.activeLayer.sprite.selection
- 
-     --Thank you https://community.aseprite.org/u/Neilius
-     local sox = selection.bounds.x
-     local soy = selection.bounds.y
-  
-     local ox = selection.bounds.x - app.activeCel.bounds.x
-     local oy = selection.bounds.y - app.activeCel.bounds.y
- 
-     app.activeCel.image:drawPixel(x+ox,y+oy,ARRAY[coloridx])   
- end
  
  function algo_ellipse(x0,y0,x1,y1)
    --  void algo_ellipse(int x0, int y0, int x1, int y1, void* data, AlgoPixel proc)
@@ -148,15 +133,8 @@
  end
  
  
- function magic(source)
+ function magic()
     
-     local selection = app.activeLayer.sprite.selection
- 
-     local sox = selection.bounds.x
-     local soy = selection.bounds.y
-     local sow = selection.bounds.width
-     local soh = selection.bounds.height
- 
      local data = dlg.data
  
      local width = data.iniwidth
@@ -193,13 +171,13 @@
          p1 = Point(deltax + centre.x + width/2,deltay + centre.y - height/2)
          
          --DEBUG This is using aseprite commands
-         app.useTool
-         {
-         tool="filled_ellipse",
-         color=ARRAY[i+1],
-         points={ p0,p1 },
-         layer = alayer,
-         }
+         --app.useTool
+         --{
+         --tool="filled_ellipse",
+         --color=ARRAY[i+1],
+         --points={ p0,p1 },
+         --layer = alayer,
+         --}
  
          if data.inispatter == 0 then
              algo_ellipse(p0.x, p0.y, p1.x, p1.y)

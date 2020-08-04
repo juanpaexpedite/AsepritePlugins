@@ -46,7 +46,7 @@
 
      --TESTING RANDOM
      local value = math.random(0,100)
-     if value < minvaluepercent then
+     if value <= minvaluepercent then
         if selection.isEmpty or selection:contains(x,y) then
             img:drawPixel(x,y,ARRAY[coloridx])   
         end

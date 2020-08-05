@@ -14,6 +14,7 @@ local stepsize = 0
 local sprite
 local imgwidth
 local imgheight
+local brushimage
 
 local length = 1
 
@@ -70,6 +71,26 @@ function proc(x,y)
     end
 end
 
+function procpattern(x,y)
+
+    if(x< 0 or y < 0) then
+        do return end
+    end
+
+    --if math.isinf(x) ~= 0 then
+        --do return end
+    --end
+
+    --if math.isinf(y) ~= 0 then
+        --do return end
+    --end
+
+    if selection.isEmpty or selection:contains(x,y) then
+       --img:drawPixel(x,y,ARRAY[coloridx])   
+       drawpixelpattern(brushimage,x,y)
+    end
+end
+
 function procline(x0,y,x1)
 
    local selection = app.activeSprite.selection
@@ -122,6 +143,49 @@ function algo_line_perfect(px1,py1,px2,py2)
         proc(y,x)
      else
         proc(x,y)
+     end
+
+     e = e+h
+     if e >= w then
+        y = y+dy
+        e= e-w
+     end
+    end
+
+end
+
+function algo_line_perfect_pattern(px1,py1,px2,py2)
+    
+    local yaxis = false
+
+    local x1 = px1
+    local y1 = py1
+    local x2 = px2
+    local y2 = py2
+
+    if (math.abs(py2-py1) > math.abs(px2-px1)) then
+        x1 = py1
+        y1 = px1
+        x2 = py2
+        y2 = px2
+        yaxis = true
+    end
+
+    local w = math.abs(x2-x1)+1;
+    local h = math.abs(y2-y1)+1;
+    local dx = signum(x2-x1);
+    local dy = signum(y2-y1);
+
+    local e = 0;
+    local y = y1;
+
+    x2 = x2 + dx;
+
+    for x=x1,x2,dx do
+     if yaxis then
+        procpattern(y,x)
+     else
+        procpattern(x,y)
      end
 
      e = e+h
@@ -203,7 +267,7 @@ function magic()
     minvaluepercent = 100
     for c = 0,colorcount-1,1 do
             coloridx = c+1
-            for y=0,stepsize-1,0.5 do
+            for y=0,stepsize-1,1 do
                 local x = (y+offset-b)/a
 
                 --(x,y is common on data line and in each perpendicular line)
@@ -293,7 +357,7 @@ function magic()
         if activebrush == nil then
             do return end
         end
-        local brushimage = activebrush.image
+        brushimage = activebrush.image
 
         if brushimage == nil then
             do return end
@@ -323,16 +387,49 @@ function magic()
             --coloridx = coloridx+1
         --end
 
-        coloridx=1
-        for y=stepsize,stepsize*(colorcount-1),stepsize do
-            for x=0,imgwidth,bw do
-                drawpattern(brushimage,x,y)
+        --coloridx=1
+        --for y=stepsize,stepsize*(colorcount-1),stepsize do
+            --for x=0,imgwidth,bw do
+                --drawpattern(brushimage,x,y)
+            --end
+            --coloridx = coloridx+1
+        --end
+
+        offset=0
+        for c = 0,colorcount-1,1 do
+            coloridx = c+1
+            for y=stepsize-1,stepsize-1+bh,1 do
+                local x = (y+offset-b)/a
+    
+                --(x,y is common on data line and in each perpendicular line)
+                local xl = x-1000
+                local yl = oa*xl + b + y + offset
+    
+                local xr = x+1000
+                local yr = oa*xr + b + y + offset
+    
+                --algo_line(rxl,ryl,rxr,ryr)
+                --algo_line(xl,yl,xr,yr)
+                algo_line_perfect_pattern(xl,yl,xr,yr)
+    
             end
-            coloridx = coloridx+1
+        offset = offset + stepsize
         end
 
     end
 
+end
+
+function drawpixelpattern(brushimage, x, y)
+    local val = 0
+    local pc = app.pixelColor
+    local dx = math.fmod(x,brushimage.width)
+    local dy = math.fmod(y,brushimage.height)
+    val = brushimage:getPixel(dx,dy)
+    local alpha = pc.rgbaA(val)
+    if alpha > 0 then
+    img:drawPixel(x,y,ARRAY[coloridx])   
+    end
 end
 
 function drawpattern(brushimage, offsetx, offsety)
